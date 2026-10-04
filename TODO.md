@@ -6,13 +6,13 @@
 
 - [x] 创建 `src/my_llama/` 的各模块与 `__init__.py`，按 [README.md](README.md) 的目录分层。
 - [ ] 搞清楚模型各个模块的调用关系（按照完整输入输出的角度）
-- [ ] 写 `pyproject.toml`：Python、PyTorch、torchvision、FairScale、tiktoken、Pydantic、Pillow、Fire、量化相关依赖；声明 completion/chat/quantize CLI 入口。
-- [ ] 梳理共享类型：`RawMessage`、`RawContent`、`RawMediaItem`、`StopReason`、`GenerationResult`、`QuantizationMode`、工具调用格式；决定在本项目定义或明确引用。
+- [x] 不写 `pyproject.toml`：Python、PyTorch、torchvision、FairScale、tiktoken、Pydantic、Pillow、Fire、量化相关依赖；声明 completion/chat/quantize CLI 入口。
+- [x] 梳理共享类型：`RawMessage`、`RawContent`、`RawMediaItem`、`StopReason`、`GenerationResult`、`QuantizationMode`、工具调用格式；决定在本项目定义或明确引用。
 - [ ] 为每个模块写参考源码路径、关键 shape 和外部依赖注释，避免漏掉隐藏的加载 hook。
 
 ## 1. 参数与数据结构
 
-- [ ] 复现 `QuantizationArgs`、`LoRAArgs`、`MoEArgs`、`VisionArgs`、`ModelArgs` 的字段与默认值。
+- [x] 复现 `QuantizationArgs`、`LoRAArgs`、`MoEArgs`、`VisionArgs`、`ModelArgs` 的字段与默认值。
 - [ ] 复现模型参数校验、scaled RoPE 默认参数，以及 Scout/Maverick 使用到的配置分支。
 - [ ] 复现 `LLMInput`、`TransformerInput`、`MaskedEmbedding`、`LLMOutput`，写清 batch、序列、tile 和 patch 维度。
 
