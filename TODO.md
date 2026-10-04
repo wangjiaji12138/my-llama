@@ -4,7 +4,7 @@
 
 ## 0. 工程骨架与依赖
 
-- [ ] 创建 `src/my_llama/` 的各模块与 `__init__.py`，按 [README.md](README.md) 的目录分层。
+- [x] 创建 `src/my_llama/` 的各模块与 `__init__.py`，按 [README.md](README.md) 的目录分层。
 - [ ] 搞清楚模型各个模块的调用关系（按照完整输入输出的角度）
 - [ ] 写 `pyproject.toml`：Python、PyTorch、torchvision、FairScale、tiktoken、Pydantic、Pillow、Fire、量化相关依赖；声明 completion/chat/quantize CLI 入口。
 - [ ] 梳理共享类型：`RawMessage`、`RawContent`、`RawMediaItem`、`StopReason`、`GenerationResult`、`QuantizationMode`、工具调用格式；决定在本项目定义或明确引用。
