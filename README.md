@@ -4,6 +4,8 @@
 
 逐文件任务见 [TODO.md](TODO.md)。本目录目前只放路线图；下方 `src/` 是建议你后续亲手创建的结构。这里的“完整版”指当前仓库的 Llama 4 **推理实现**，不扩展到仓库未提供的训练系统。
 
+![Llama4 架构总览](llama4-architecture/llama4-architecture-overview.png "Llama4 架构总览")
+
 ## 源码地图
 
 | 参考文件 | 作用 | 建议对应模块 |

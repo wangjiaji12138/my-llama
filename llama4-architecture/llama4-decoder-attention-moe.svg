@@ -1,0 +1,306 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1850" viewBox="0 0 2400 1850" role="img" aria-labelledby="title desc">
+<title id="title">Llama 4：Decoder、Attention 与 MoE 展开</title><desc id="desc">放大展示 pre-norm 残差层、GQA 注意力、RoPE/NoPE 层类型及带输入门控的 Top-1 路由专家。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#8B99AD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#7160A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs><rect width="100%" height="100%" fill="#FBFCFE"/>
+<g font-family="PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" fill="#243247">
+<text x="70" y="65" font-size="22" font-weight="600" fill="#356BB6" text-anchor="start">LLAMA 4  /  INSIDE THE DECODER  /  02</text>
+<text x="67" y="143" font-size="66" font-weight="650" fill="#243247" text-anchor="start">从一层 Decoder，看懂 Attention 与 MoE</text>
+<text x="71" y="191" font-size="27" font-weight="400" fill="#647187" text-anchor="start">模块负责什么 · 数据怎样流动 · 参考实现如何调用</text>
+<rect x="80" y="267" width="44" height="40" rx="9" fill="#243247" stroke="none" stroke-width="1.8"/>
+<text x="102" y="296" font-size="20" font-weight="600" fill="white" text-anchor="middle">A</text>
+<text x="141" y="298" font-size="29" font-weight="600" fill="#243247" text-anchor="start">单层 Transformer</text>
+<text x="141" y="332" font-size="18" font-weight="400" fill="#647187" text-anchor="start">PRE-NORM + RESIDUAL</text>
+<rect x="740" y="267" width="44" height="40" rx="9" fill="#243247" stroke="none" stroke-width="1.8"/>
+<text x="762" y="296" font-size="20" font-weight="600" fill="white" text-anchor="middle">B</text>
+<text x="801" y="298" font-size="29" font-weight="600" fill="#243247" text-anchor="start">注意力展开</text>
+<text x="801" y="332" font-size="18" font-weight="400" fill="#647187" text-anchor="start">GQA + iRoPE + KV CACHE</text>
+<rect x="1490" y="267" width="44" height="40" rx="9" fill="#243247" stroke="none" stroke-width="1.8"/>
+<text x="1512" y="296" font-size="20" font-weight="600" fill="white" text-anchor="middle">C</text>
+<text x="1551" y="298" font-size="29" font-weight="600" fill="#243247" text-anchor="start">MoE 专家路由</text>
+<text x="1551" y="332" font-size="18" font-weight="400" fill="#647187" text-anchor="start">TOP-1 ROUTING + SHARED EXPERT</text>
+<text x="332" y="393" font-size="25" font-weight="500" fill="#243247" text-anchor="middle">输入隐状态 x</text>
+<path d="M332 414V455" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="160" y="455" width="345" height="104" rx="18" fill="#E8F2FF" stroke="none" stroke-width="1.8"/>
+<g transform="translate(180,477) scale(0.9)" stroke="#356BB6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M4 20h8M28 20h8M20 4v8M20 28v8"/><circle cx="20" cy="20" r="7"/>
+</g>
+<text x="230" y="503" font-size="28" font-weight="600" fill="#243247" text-anchor="start">RMSNorm</text>
+<text x="182" y="544" font-size="23" font-weight="400" fill="#647187" text-anchor="start">稳定注意力输入的数值尺度</text>
+<path d="M332 559V609" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="160" y="609" width="345" height="126" rx="18" fill="#E8F2FF" stroke="none" stroke-width="1.8"/>
+<g transform="translate(180,631) scale(0.9)" stroke="#356BB6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="7" cy="20" r="4"/><circle cx="32" cy="7" r="4"/><circle cx="32" cy="20" r="4"/><circle cx="32" cy="33" r="4"/><path d="M11 18l17-9M11 20h17M11 22l17 9"/>
+</g>
+<text x="230" y="657" font-size="27" font-weight="600" fill="#243247" text-anchor="start">Self-Attention</text>
+<text x="182" y="698" font-size="23" font-weight="400" fill="#647187" text-anchor="start">从历史图文 token 聚合信息</text>
+<text x="182" y="717" font-size="18" font-weight="400" fill="#356BB6" text-anchor="start" font-family="Menlo, monospace">Attention.forward</text>
+<path d="M332 735V789" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="332" cy="810" r="21" fill="white" stroke="#8B99AD" stroke-width="1.8"/>
+<text x="332" y="819" font-size="28" font-weight="500" fill="#243247" text-anchor="middle">+</text>
+<path d="M332 430H100V810H311" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="83" y="643" font-size="21" font-weight="400" fill="#647187" text-anchor="middle">残</text>
+<text x="83" y="676" font-size="21" font-weight="400" fill="#647187" text-anchor="middle">差</text>
+<path d="M332 831V881" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="160" y="881" width="345" height="104" rx="18" fill="#EEEAFB" stroke="none" stroke-width="1.8"/>
+<g transform="translate(180,903) scale(0.9)" stroke="#7160A3" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M4 20h8M28 20h8M20 4v8M20 28v8"/><circle cx="20" cy="20" r="7"/>
+</g>
+<text x="230" y="929" font-size="28" font-weight="600" fill="#243247" text-anchor="start">RMSNorm</text>
+<text x="182" y="970" font-size="23" font-weight="400" fill="#647187" text-anchor="start">稳定前馈网络输入的数值尺度</text>
+<path d="M332 985V1035" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="160" y="1035" width="345" height="134" rx="18" fill="#EEEAFB" stroke="none" stroke-width="1.8"/>
+<g transform="translate(180,1057) scale(0.9)" stroke="#7160A3" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<rect x="9" y="9" width="22" height="22" rx="4"/><path d="M4 14h5M4 26h5M31 14h5M31 26h5M14 4v5M26 4v5M14 31v5M26 31v5M15 15h10v10H15z"/>
+</g>
+<text x="230" y="1083" font-size="27" font-weight="600" fill="#243247" text-anchor="start">Dense FFN / MoE</text>
+<text x="182" y="1124" font-size="23" font-weight="400" fill="#647187" text-anchor="start">非线性特征变换</text>
+<text x="182" y="1155" font-size="23" font-weight="400" fill="#647187" text-anchor="start">按层配置选择对应实现</text>
+<path d="M332 1169V1229" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="332" cy="1250" r="21" fill="white" stroke="#8B99AD" stroke-width="1.8"/>
+<text x="332" y="1259" font-size="28" font-weight="500" fill="#243247" text-anchor="middle">+</text>
+<path d="M332 857H575V1250H353" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="592" y="1080" font-size="21" font-weight="400" fill="#647187" text-anchor="start">残</text>
+<text x="592" y="1113" font-size="21" font-weight="400" fill="#647187" text-anchor="start">差</text>
+<path d="M332 1271V1320" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="332" y="1360" font-size="26" font-weight="500" fill="#243247" text-anchor="middle">输出到下一层</text>
+<text x="100" y="1440" font-size="22" font-weight="500" fill="#356BB6" text-anchor="start" font-family="Menlo, monospace">h = x + Attention(RMSNorm(x))</text>
+<text x="100" y="1481" font-size="22" font-weight="500" fill="#7160A3" text-anchor="start" font-family="Menlo, monospace">y = h + FFN_or_MoE(RMSNorm(h))</text>
+<rect x="740" y="375" width="630" height="110" rx="18" fill="#E8F2FF" stroke="none" stroke-width="1.8"/>
+<g transform="translate(760,397) scale(0.9)" stroke="#356BB6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M5 7h30v27H5zM5 16h30M5 25h30M15 7v27M25 7v27"/>
+</g>
+<text x="810" y="423" font-size="29" font-weight="600" fill="#243247" text-anchor="start">Q / K / V 投影</text>
+<text x="762" y="464" font-size="23" font-weight="400" fill="#647187" text-anchor="start">a = RMSNorm(x)；wq(a), wk(a), wv(a)</text>
+<path d="M1055 485V527" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="740" y="527" width="630" height="255" rx="18" fill="#F3F7FC" stroke="#CAD8E9" stroke-width="1.8"/>
+<text x="765" y="570" font-size="27" font-weight="600" fill="#243247" text-anchor="start">按层选择位置编码与注意力范围</text>
+<rect x="765" y="595" width="277" height="159" rx="13" fill="#E8F2FF" stroke="none" stroke-width="1.8"/>
+<text x="786" y="632" font-size="25" font-weight="600" fill="#356BB6" text-anchor="start">RoPE 层</text>
+<text x="786" y="670" font-size="22" font-weight="400" fill="#647187" text-anchor="start">Q/K 旋转位置编码</text>
+<text x="786" y="700" font-size="22" font-weight="400" fill="#647187" text-anchor="start">可选 QK Norm</text>
+<text x="786" y="730" font-size="22" font-weight="400" fill="#647187" text-anchor="start">配置分块因果注意力</text>
+<rect x="1063" y="595" width="280" height="159" rx="13" fill="#EEEAFB" stroke="none" stroke-width="1.8"/>
+<text x="1084" y="632" font-size="25" font-weight="600" fill="#7160A3" text-anchor="start">NoPE 层</text>
+<text x="1084" y="670" font-size="22" font-weight="400" fill="#647187" text-anchor="start">不使用旋转位置编码</text>
+<text x="1084" y="700" font-size="22" font-weight="400" fill="#647187" text-anchor="start">使用全局因果注意力</text>
+<text x="1084" y="730" font-size="22" font-weight="400" fill="#647187" text-anchor="start">可选长上下文温度缩放</text>
+<path d="M1055 782V824" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="740" y="824" width="630" height="126" rx="18" fill="#E8F2FF" stroke="none" stroke-width="1.8"/>
+<g transform="translate(760,846) scale(0.9)" stroke="#356BB6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<ellipse cx="20" cy="8" rx="15" ry="6"/><path d="M5 8v22c0 8 30 8 30 0V8M5 19c0 8 30 8 30 0"/>
+</g>
+<text x="810" y="872" font-size="29" font-weight="600" fill="#243247" text-anchor="start">KV Cache + GQA</text>
+<text x="762" y="913" font-size="23" font-weight="400" fill="#647187" text-anchor="start">缓存历史 K/V，避免重新计算</text>
+<text x="762" y="944" font-size="23" font-weight="400" fill="#647187" text-anchor="start">多组 Q 头共享较少的 K/V 头</text>
+<path d="M1055 950V992" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="740" y="992" width="630" height="128" rx="18" fill="#E8F2FF" stroke="none" stroke-width="1.8"/>
+<g transform="translate(760,1014) scale(0.9)" stroke="#356BB6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="7" cy="20" r="4"/><circle cx="32" cy="7" r="4"/><circle cx="32" cy="20" r="4"/><circle cx="32" cy="33" r="4"/><path d="M11 18l17-9M11 20h17M11 22l17 9"/>
+</g>
+<text x="810" y="1040" font-size="29" font-weight="600" fill="#243247" text-anchor="start">因果注意力 + 输出投影</text>
+<text x="762" y="1081" font-size="23" font-weight="400" fill="#647187" text-anchor="start">SDPA(Q, K, V, mask) → wo</text>
+<text x="762" y="1112" font-size="23" font-weight="400" fill="#647187" text-anchor="start">融合可访问的历史信息，回到语言隐藏维度</text>
+<path d="M1055 1120V1167" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="1055" y="1204" font-size="25" font-weight="500" fill="#243247" text-anchor="middle">Attention 输出 → 残差相加</text>
+<text x="741" y="1280" font-size="25" font-weight="600" fill="#243247" text-anchor="start">iRoPE：在层之间交错两类注意力</text>
+<rect x="748" y="1310" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="748" y="1328" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1328" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="748" y="1346" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1346" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1346" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="748" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="748" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1382" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="748" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="748" y="1418" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1418" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1418" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1418" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1418" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="748" y="1436" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="766" y="1436" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="784" y="1436" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="802" y="1436" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="820" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="838" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="856" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="874" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1310" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1310" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1328" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1328" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1328" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1346" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1346" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1346" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1346" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1364" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1364" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1382" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1382" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1382" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1382" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1382" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1382" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1400" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1400" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1418" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1418" width="15" height="15" rx="2" fill="#E8EDF3" stroke="none" stroke-width="1.8"/>
+<rect x="1080" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1098" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1116" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1134" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1152" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1170" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1188" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<rect x="1206" y="1436" width="15" height="15" rx="2" fill="#356BB6" stroke="none" stroke-width="1.8"/>
+<text x="910" y="1345" font-size="20" font-weight="400" fill="#647187" text-anchor="start">分块因果</text>
+<text x="910" y="1374" font-size="20" font-weight="400" fill="#647187" text-anchor="start">局部块内可见</text>
+<text x="910" y="1403" font-size="20" font-weight="400" fill="#647187" text-anchor="start">非滑动窗口</text>
+<text x="1240" y="1345" font-size="20" font-weight="400" fill="#647187" text-anchor="start">全局因果</text>
+<text x="1240" y="1374" font-size="20" font-weight="400" fill="#647187" text-anchor="start">看所有历史</text>
+<text x="1240" y="1403" font-size="20" font-weight="400" fill="#647187" text-anchor="start">仍屏蔽未来</text>
+<text x="744" y="1491" font-size="22" font-weight="400" fill="#647187" text-anchor="start">注意力类型与 FFN 类型分别由配置决定。</text>
+<rect x="1660" y="375" width="470" height="77" rx="15" fill="#EEEAFB" stroke="none" stroke-width="1.8"/>
+<text x="1895" y="425" font-size="28" font-weight="600" fill="#243247" text-anchor="middle">输入 z = RMSNorm(h)</text>
+<path d="M1895 452V480" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1895 480H1648V530" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1895 480H2100V530" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="1490" y="530" width="315" height="168" rx="18" fill="#E7F3EA" stroke="none" stroke-width="1.8"/>
+<g transform="translate(1510,552) scale(0.9)" stroke="#397957" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<rect x="9" y="9" width="22" height="22" rx="4"/><path d="M4 14h5M4 26h5M31 14h5M31 26h5M14 4v5M26 4v5M14 31v5M26 31v5M15 15h10v10H15z"/>
+</g>
+<text x="1560" y="578" font-size="28" font-weight="600" fill="#243247" text-anchor="start">共享专家</text>
+<text x="1512" y="619" font-size="23" font-weight="400" fill="#647187" text-anchor="start">每个 token 都经过</text>
+<text x="1512" y="650" font-size="23" font-weight="400" fill="#647187" text-anchor="start">SwiGLU 变换</text>
+<text x="1512" y="680" font-size="18" font-weight="400" fill="#397957" text-anchor="start" font-family="Menlo, monospace">shared_expert(z)</text>
+<rect x="1880" y="530" width="450" height="168" rx="18" fill="#EEEAFB" stroke="none" stroke-width="1.8"/>
+<g transform="translate(1900,552) scale(0.9)" stroke="#7160A3" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="7" cy="20" r="4"/><circle cx="32" cy="7" r="4"/><circle cx="32" cy="20" r="4"/><circle cx="32" cy="33" r="4"/><path d="M11 18l17-9M11 20h17M11 22l17 9"/>
+</g>
+<text x="1950" y="578" font-size="29" font-weight="600" fill="#243247" text-anchor="start">Router</text>
+<text x="1902" y="619" font-size="23" font-weight="400" fill="#647187" text-anchor="start">logits = z · Wrouter</text>
+<text x="1902" y="650" font-size="23" font-weight="400" fill="#647187" text-anchor="start">Top-1 选中路由专家 e</text>
+<text x="1902" y="680" font-size="18" font-weight="400" fill="#7160A3" text-anchor="start" font-family="Menlo, monospace">matmul → topk → sigmoid</text>
+<path d="M2100 698V742" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="2120" y="729" font-size="22" font-weight="500" fill="#7160A3" text-anchor="start">e / gₑ</text>
+<rect x="1880" y="742" width="450" height="106" rx="14" fill="#FFF0DE" stroke="none" stroke-width="1.8"/>
+<text x="1905" y="783" font-size="24" font-weight="600" fill="#243247" text-anchor="start">输入门控：z′ = sigmoid(logitₑ) · z</text>
+<text x="1905" y="821" font-size="23" font-weight="400" fill="#647187" text-anchor="start">先缩放输入，再送入选中的专家</text>
+<path d="M2100 480H2360V795H2330" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="2339" y="774" font-size="24" font-weight="500" fill="#7160A3" text-anchor="start">z</text>
+<path d="M2100 848V897" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="1850" y="897" width="480" height="280" rx="18" fill="#F7F5FC" stroke="#C6BBDD" stroke-width="1.8" stroke-dasharray="7 7"/>
+<text x="1874" y="938" font-size="24" font-weight="600" fill="#243247" text-anchor="start">路由专家池 · E 个独立 SwiGLU</text>
+<rect x="1874" y="978" width="126" height="116" rx="13" fill="#EEF0F4" stroke="#D8DFE8" stroke-width="1"/>
+<g transform="translate(1918,990) scale(0.9)" stroke="#98A3B4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<rect x="9" y="9" width="22" height="22" rx="4"/><path d="M4 14h5M4 26h5M31 14h5M31 26h5M14 4v5M26 4v5M14 31v5M26 31v5M15 15h10v10H15z"/>
+</g>
+<text x="1937" y="1064" font-size="24" font-weight="600" fill="#647187" text-anchor="middle">专家 1</text>
+<rect x="2022" y="978" width="126" height="116" rx="13" fill="#EEEAFB" stroke="#7160A3" stroke-width="2.2"/>
+<g transform="translate(2066,990) scale(0.9)" stroke="#7160A3" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<rect x="9" y="9" width="22" height="22" rx="4"/><path d="M4 14h5M4 26h5M31 14h5M31 26h5M14 4v5M26 4v5M14 31v5M26 31v5M15 15h10v10H15z"/>
+</g>
+<text x="2085" y="1064" font-size="24" font-weight="600" fill="#7160A3" text-anchor="middle">专家 e</text>
+<rect x="2170" y="978" width="126" height="116" rx="13" fill="#EEF0F4" stroke="#D8DFE8" stroke-width="1"/>
+<g transform="translate(2214,990) scale(0.9)" stroke="#98A3B4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<rect x="9" y="9" width="22" height="22" rx="4"/><path d="M4 14h5M4 26h5M31 14h5M31 26h5M14 4v5M26 4v5M14 31v5M26 31v5M15 15h10v10H15z"/>
+</g>
+<text x="2233" y="1064" font-size="24" font-weight="600" fill="#647187" text-anchor="middle">专家 E</text>
+<text x="2090" y="1139" font-size="23" font-weight="500" fill="#7160A3" text-anchor="middle">仅 1 个被选中 · E = 16 / 128</text>
+<path d="M1648 698V1225H1874" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M2090 1177V1225H1916" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="1895" cy="1225" r="21" fill="white" stroke="#8B99AD" stroke-width="1.8"/>
+<text x="1895" y="1234" font-size="28" font-weight="500" fill="#243247" text-anchor="middle">+</text>
+<path d="M1895 1246V1298" fill="none" stroke="#8B99AD" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="1895" y="1340" font-size="27" font-weight="600" fill="#243247" text-anchor="middle">共享输出 + 路由专家输出</text>
+<rect x="1490" y="1380" width="840" height="145" rx="16" fill="#F3F5F9" stroke="none" stroke-width="1.8"/>
+<text x="1516" y="1427" font-size="27" font-weight="600" fill="#7160A3" text-anchor="start">MoE(z) = Shared(z) + Expertₑ(gₑ · z)</text>
+<text x="1516" y="1468" font-size="23" font-weight="400" fill="#647187" text-anchor="start">gₑ = sigmoid(logitₑ)  ·  门控位置依照 Meta 参考实现</text>
+<text x="1516" y="1500" font-size="22" font-weight="400" fill="#647187" text-anchor="start">共享专家与路由专家并行；两条分支的输出相加。</text>
+<rect x="70" y="1580" width="2260" height="161" rx="18" fill="#EDF2F7" stroke="none" stroke-width="1.8"/>
+<text x="98" y="1624" font-size="25" font-weight="650" fill="#243247" text-anchor="start">源码调用</text>
+<text x="272" y="1624" font-size="23" font-weight="500" fill="#243247" text-anchor="start" font-family="Menlo, PingFang SC, sans-serif">Transformer.forward → layers[i].forward → attention(attention_norm(x)) → feed_forward(ffn_norm(h))</text>
+<text x="100" y="1670" font-size="23" font-weight="400" fill="#647187" text-anchor="start">Dense 层调用 FeedForward；MoE 层调用 MoE.forward。共享专家和路由专家的基本非线性都是 SwiGLU。</text>
+<text x="100" y="1706" font-size="23" font-weight="400" fill="#647187" text-anchor="start">图示为计算语义；层数、位置编码间隔、分块大小与 MoE 分布，以 checkpoint 配置为准。</text>
+<text x="72" y="1797" font-size="19" font-weight="400" fill="#647187" text-anchor="start">依据：Meta llama-models 0e0b8c5  ·  model.py / moe.py / ffn.py  ·  掩码为概念示意；参考实现的解码细节见配套说明</text>
+<text x="2325" y="1797" font-size="21" font-weight="600" fill="#647187" text-anchor="end">02 / 02</text>
+</g></svg>
