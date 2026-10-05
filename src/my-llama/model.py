@@ -72,3 +72,30 @@ def precompute_freqs_cis(
     # 生成复数组合代表角度
     freqs_cis = torch.polar(torch.ones_like(freqs), freqs)
     return freqs_cis
+
+def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
+    # x: [B, seq_len, num_heads, head_dim]
+    # freqs_cis: [seq_len, head_dim]
+    # 需要把freqs_cis调整到x一样的维度才能进行矩阵乘法
+    ndim = x.dim
+    assert 0<= 1 < ndim
+    assert freqs_cis.shape == (x.shape[1], x.shape[-1])
+    
+    # shape = [1, seq_len, 1, head_dim]
+    shape = [d if i==1 or i == ndim - 1 else 1 for i,d in enumerate(x.shape)]
+    return freqs_cis.view(*shape)
+
+def apply_rotary_emb(
+    xq: torch.Tensor,
+    xk: torch.Tensor,
+    freqs_cis: torch.Tensor
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1],-1,2))
+    xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1],-1,2))
+    freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
+    
+    # 复数乘法后view_as_real拆分最后一维为实部和虚部，flatten合并实部虚部
+    # pytorch不支持直接将complex64转换为2*float
+    xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
+    xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(3)
+    return xq_out.type_as(xq),xk_out.type_as(xk)
