@@ -4,7 +4,7 @@
 from enum import Enum
 from typing import Optional
 
-fron pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator
 
 class QuantizationScheme(Enum):
     """
