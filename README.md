@@ -8,9 +8,12 @@
 
 ## 源码地图
 
+仓库中 `llama-models/llama_models` 是指向 `models` 的符号链接，所以 `llama_models/datatypes.py` 与 `models/datatypes.py` 是同一个文件。`models/llama4/` 放 Llama 4 专用实现；Llama 4 还会导入上一级的共享模块。下面两份 `datatypes.py` 职责不同，均属于完整推理路径。
+
 | 参考文件 | 作用 | 建议对应模块 |
 | --- | --- | --- |
 | [`args.py`](../llama-models/models/llama4/args.py) | 文本、MoE、视觉、量化参数及校验 | `src/my_llama/config.py` |
+| [`../datatypes.py`](../llama-models/models/datatypes.py) | 跨模型共用的消息/图文内容、工具调用、停止原因、流式生成结果与量化模式；Llama 4 的 `chat_format.py`、`generation.py` 等直接导入 | `src/my_llama/types.py`、`chat.py`、`generate.py`、`quantization/loader.py` |
 | [`datatypes.py`](../llama-models/models/llama4/datatypes.py) | tokens、图像 embedding、logits 的输入输出约定 | `src/my_llama/types.py` |
 | [`model.py`](../llama-models/models/llama4/model.py) | RMSNorm、RoPE、GQA 注意力、KV cache、Transformer block、文本主干、分块 mask | `layers.py`、`attention.py`、`model.py` |
 | [`ffn.py`](../llama-models/models/llama4/ffn.py) | SwiGLU dense FFN | `layers.py` |
